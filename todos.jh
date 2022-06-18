@@ -1,0 +1,45 @@
+entity Organization {
+    name String required unique minlength(3) maxlength(255)
+    image ImageBlob
+}
+// an ignored comment
+/** not an ignored comment */
+entity Project {
+    name String required minlength(3) maxlength(255),
+}
+entity Task {
+    title String required minlength(3) maxlength(255),
+    description String,
+    dueDate LocalDate,
+    endDate LocalDate,
+    completedDate LocalDate,
+    important Boolean,
+    deleted Boolean
+}
+entity Tag {
+    name String required minlength(3) maxlength(10),
+    color String required
+}
+entity Status {
+    name String required minlength(3) maxlength(255),
+}
+entity UserExtras {
+    image ImageBlob
+}
+
+relationship OneToOne {
+	UserExtras to User
+}
+
+relationship ManyToMany {
+    Task{tag(name)} to Tag{task}
+    UserExtras{organization(name)} to Organization{user}
+}
+relationship ManyToOne{
+    
+    Task to Project,
+    Task to Status
+    Task{owner} to UserExtras
+    Task{parent} to Task
+    Project to Organization
+}
