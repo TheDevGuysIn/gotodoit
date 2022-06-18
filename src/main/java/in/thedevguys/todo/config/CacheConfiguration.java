@@ -48,6 +48,19 @@ public class CacheConfiguration {
             createCache(cm, in.thedevguys.todo.domain.User.class.getName());
             createCache(cm, in.thedevguys.todo.domain.Authority.class.getName());
             createCache(cm, in.thedevguys.todo.domain.User.class.getName() + ".authorities");
+            createCache(cm, in.thedevguys.todo.domain.Organization.class.getName());
+            createCache(cm, in.thedevguys.todo.domain.Organization.class.getName() + ".projects");
+            createCache(cm, in.thedevguys.todo.domain.Organization.class.getName() + ".users");
+            createCache(cm, in.thedevguys.todo.domain.Project.class.getName());
+            createCache(cm, in.thedevguys.todo.domain.Project.class.getName() + ".tasks");
+            createCache(cm, in.thedevguys.todo.domain.Task.class.getName());
+            createCache(cm, in.thedevguys.todo.domain.Task.class.getName() + ".tags");
+            createCache(cm, in.thedevguys.todo.domain.Tag.class.getName());
+            createCache(cm, in.thedevguys.todo.domain.Tag.class.getName() + ".tasks");
+            createCache(cm, in.thedevguys.todo.domain.Status.class.getName());
+            createCache(cm, in.thedevguys.todo.domain.Status.class.getName() + ".tasks");
+            createCache(cm, in.thedevguys.todo.domain.UserExtras.class.getName());
+            createCache(cm, in.thedevguys.todo.domain.UserExtras.class.getName() + ".organizations");
             // jhipster-needle-ehcache-add-entry
         };
     }
