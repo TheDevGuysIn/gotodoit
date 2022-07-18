@@ -7,22 +7,22 @@ services:
       - _JAVA_OPTIONS=-Xmx512m -Xms256m
       - SPRING_PROFILES_ACTIVE=prod,api-docs
       - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://gotodoit-postgresql:5432/GoToDoIt
-      - SPRING_LIQUIBASE_URL=jdbc:postgresql://gotodoit-postgresql:5432/GoToDoIt
-      - JHIPSTER_SLEEP=30 # gives time for other services to boot before the application
+      - SPRING_DATASOURCE_URL=jdbc:mysql://gotodoit-mysql:3306/gotodoit?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - SPRING_LIQUIBASE_URL=jdbc:mysql://gotodoit-mysql:3306/gotodoit?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - JHIPSTER_SLEEP=15 # gives time for other services to boot before the application
     # If you want to expose these ports outside your dev PC,
     # remove the "127.0.0.1:" prefix
     ports:
       - 127.0.0.1:8080:8080
   gotodoit-mysql:
-    image: mysql:8.0.28
+    image: mariadb:10.5.8
     # volumes:
-    #   - ~/volumes/jhipster/GoToDoIt/postgresql/:/var/lib/postgresql/data/
+    #   - ~/volumes/jhipster/gotodoit/mysql/:/var/lib/mysql/
     environment:
-      - POSTGRES_USER=GoToDoIt
-      - POSTGRES_PASSWORD=
-      - POSTGRES_HOST_AUTH_METHOD=trust
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=gotodoit
     # If you want to expose these ports outside your dev PC,
     # remove the "127.0.0.1:" prefix
     ports:
-      - 127.0.0.1:5432:5432
+      - 127.0.0.1:3306:3306
+    command: mysqld --lower_case_table_names=1 --skip-ssl --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
