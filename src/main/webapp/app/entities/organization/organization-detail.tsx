@@ -4,9 +4,10 @@ import { Button, Row, Col } from 'reactstrap';
 import { openFile, byteSize } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { getEntity } from './organization.reducer';
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+
+import { getEntity } from './organization.reducer';
 
 export const OrganizationDetail = (props: RouteComponentProps<{ id: string }>) => {
   const dispatch = useAppDispatch();

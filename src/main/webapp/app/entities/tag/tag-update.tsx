@@ -4,13 +4,14 @@ import { Button, Row, Col, FormText } from 'reactstrap';
 import { isNumber, ValidatedField, ValidatedForm } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { ITask } from 'app/shared/model/task.model';
-import { getEntities as getTasks } from 'app/entities/task/task.reducer';
-import { getEntity, updateEntity, createEntity, reset } from './tag.reducer';
-import { ITag } from 'app/shared/model/tag.model';
 import { convertDateTimeFromServer, convertDateTimeToServer, displayDefaultDateTime } from 'app/shared/util/date-utils';
 import { mapIdList } from 'app/shared/util/entity-utils';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+
+import { ITask } from 'app/shared/model/task.model';
+import { getEntities as getTasks } from 'app/entities/task/task.reducer';
+import { ITag } from 'app/shared/model/tag.model';
+import { getEntity, updateEntity, createEntity, reset } from './tag.reducer';
 
 export const TagUpdate = (props: RouteComponentProps<{ id: string }>) => {
   const dispatch = useAppDispatch();

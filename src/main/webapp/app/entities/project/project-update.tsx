@@ -4,13 +4,14 @@ import { Button, Row, Col, FormText } from 'reactstrap';
 import { isNumber, ValidatedField, ValidatedForm } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { IOrganization } from 'app/shared/model/organization.model';
-import { getEntities as getOrganizations } from 'app/entities/organization/organization.reducer';
-import { getEntity, updateEntity, createEntity, reset } from './project.reducer';
-import { IProject } from 'app/shared/model/project.model';
 import { convertDateTimeFromServer, convertDateTimeToServer, displayDefaultDateTime } from 'app/shared/util/date-utils';
 import { mapIdList } from 'app/shared/util/entity-utils';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+
+import { IOrganization } from 'app/shared/model/organization.model';
+import { getEntities as getOrganizations } from 'app/entities/organization/organization.reducer';
+import { IProject } from 'app/shared/model/project.model';
+import { getEntity, updateEntity, createEntity, reset } from './project.reducer';
 
 export const ProjectUpdate = (props: RouteComponentProps<{ id: string }>) => {
   const dispatch = useAppDispatch();

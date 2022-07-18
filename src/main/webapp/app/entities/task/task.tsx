@@ -4,10 +4,11 @@ import { Button, Table } from 'reactstrap';
 import { Translate, TextFormat } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { getEntities } from './task.reducer';
-import { ITask } from 'app/shared/model/task.model';
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+
+import { ITask } from 'app/shared/model/task.model';
+import { getEntities } from './task.reducer';
 
 export const Task = (props: RouteComponentProps<{ url: string }>) => {
   const dispatch = useAppDispatch();
@@ -33,7 +34,7 @@ export const Task = (props: RouteComponentProps<{ url: string }>) => {
           <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
             <FontAwesomeIcon icon="sync" spin={loading} /> Refresh List
           </Button>
-          <Link to={`${match.url}/new`} className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
+          <Link to="/task/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
             <FontAwesomeIcon icon="plus" />
             &nbsp; Create new Task
           </Link>
@@ -64,7 +65,7 @@ export const Task = (props: RouteComponentProps<{ url: string }>) => {
               {taskList.map((task, i) => (
                 <tr key={`entity-${i}`} data-cy="entityTable">
                   <td>
-                    <Button tag={Link} to={`${match.url}/${task.id}`} color="link" size="sm">
+                    <Button tag={Link} to={`/task/${task.id}`} color="link" size="sm">
                       {task.id}
                     </Button>
                   </td>
@@ -77,15 +78,15 @@ export const Task = (props: RouteComponentProps<{ url: string }>) => {
                   </td>
                   <td>{task.important ? 'true' : 'false'}</td>
                   <td>{task.deleted ? 'true' : 'false'}</td>
-                  <td>{task.project ? <Link to={`project/${task.project.id}`}>{task.project.id}</Link> : ''}</td>
-                  <td>{task.status ? <Link to={`status/${task.status.id}`}>{task.status.id}</Link> : ''}</td>
-                  <td>{task.owner ? <Link to={`user-extras/${task.owner.id}`}>{task.owner.id}</Link> : ''}</td>
-                  <td>{task.parent ? <Link to={`task/${task.parent.id}`}>{task.parent.id}</Link> : ''}</td>
+                  <td>{task.project ? <Link to={`/project/${task.project.id}`}>{task.project.id}</Link> : ''}</td>
+                  <td>{task.status ? <Link to={`/status/${task.status.id}`}>{task.status.id}</Link> : ''}</td>
+                  <td>{task.owner ? <Link to={`/user-extras/${task.owner.id}`}>{task.owner.id}</Link> : ''}</td>
+                  <td>{task.parent ? <Link to={`/task/${task.parent.id}`}>{task.parent.id}</Link> : ''}</td>
                   <td>
                     {task.tags
                       ? task.tags.map((val, j) => (
                           <span key={j}>
-                            <Link to={`tag/${val.id}`}>{val.name}</Link>
+                            <Link to={`/tag/${val.id}`}>{val.name}</Link>
                             {j === task.tags.length - 1 ? '' : ', '}
                           </span>
                         ))
@@ -93,13 +94,13 @@ export const Task = (props: RouteComponentProps<{ url: string }>) => {
                   </td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`${match.url}/${task.id}`} color="info" size="sm" data-cy="entityDetailsButton">
+                      <Button tag={Link} to={`/task/${task.id}`} color="info" size="sm" data-cy="entityDetailsButton">
                         <FontAwesomeIcon icon="eye" /> <span className="d-none d-md-inline">View</span>
                       </Button>
-                      <Button tag={Link} to={`${match.url}/${task.id}/edit`} color="primary" size="sm" data-cy="entityEditButton">
+                      <Button tag={Link} to={`/task/${task.id}/edit`} color="primary" size="sm" data-cy="entityEditButton">
                         <FontAwesomeIcon icon="pencil-alt" /> <span className="d-none d-md-inline">Edit</span>
                       </Button>
-                      <Button tag={Link} to={`${match.url}/${task.id}/delete`} color="danger" size="sm" data-cy="entityDeleteButton">
+                      <Button tag={Link} to={`/task/${task.id}/delete`} color="danger" size="sm" data-cy="entityDeleteButton">
                         <FontAwesomeIcon icon="trash" /> <span className="d-none d-md-inline">Delete</span>
                       </Button>
                     </div>

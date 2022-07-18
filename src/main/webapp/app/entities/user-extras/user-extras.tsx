@@ -4,10 +4,11 @@ import { Button, Table } from 'reactstrap';
 import { openFile, byteSize, Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { getEntities } from './user-extras.reducer';
-import { IUserExtras } from 'app/shared/model/user-extras.model';
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+
+import { IUserExtras } from 'app/shared/model/user-extras.model';
+import { getEntities } from './user-extras.reducer';
 
 export const UserExtras = (props: RouteComponentProps<{ url: string }>) => {
   const dispatch = useAppDispatch();
@@ -33,7 +34,7 @@ export const UserExtras = (props: RouteComponentProps<{ url: string }>) => {
           <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
             <FontAwesomeIcon icon="sync" spin={loading} /> Refresh List
           </Button>
-          <Link to={`${match.url}/new`} className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
+          <Link to="/user-extras/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
             <FontAwesomeIcon icon="plus" />
             &nbsp; Create new User Extras
           </Link>
@@ -55,7 +56,7 @@ export const UserExtras = (props: RouteComponentProps<{ url: string }>) => {
               {userExtrasList.map((userExtras, i) => (
                 <tr key={`entity-${i}`} data-cy="entityTable">
                   <td>
-                    <Button tag={Link} to={`${match.url}/${userExtras.id}`} color="link" size="sm">
+                    <Button tag={Link} to={`/user-extras/${userExtras.id}`} color="link" size="sm">
                       {userExtras.id}
                     </Button>
                   </td>
@@ -79,7 +80,7 @@ export const UserExtras = (props: RouteComponentProps<{ url: string }>) => {
                     {userExtras.organizations
                       ? userExtras.organizations.map((val, j) => (
                           <span key={j}>
-                            <Link to={`organization/${val.id}`}>{val.name}</Link>
+                            <Link to={`/organization/${val.id}`}>{val.name}</Link>
                             {j === userExtras.organizations.length - 1 ? '' : ', '}
                           </span>
                         ))
@@ -87,13 +88,13 @@ export const UserExtras = (props: RouteComponentProps<{ url: string }>) => {
                   </td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`${match.url}/${userExtras.id}`} color="info" size="sm" data-cy="entityDetailsButton">
+                      <Button tag={Link} to={`/user-extras/${userExtras.id}`} color="info" size="sm" data-cy="entityDetailsButton">
                         <FontAwesomeIcon icon="eye" /> <span className="d-none d-md-inline">View</span>
                       </Button>
-                      <Button tag={Link} to={`${match.url}/${userExtras.id}/edit`} color="primary" size="sm" data-cy="entityEditButton">
+                      <Button tag={Link} to={`/user-extras/${userExtras.id}/edit`} color="primary" size="sm" data-cy="entityEditButton">
                         <FontAwesomeIcon icon="pencil-alt" /> <span className="d-none d-md-inline">Edit</span>
                       </Button>
-                      <Button tag={Link} to={`${match.url}/${userExtras.id}/delete`} color="danger" size="sm" data-cy="entityDeleteButton">
+                      <Button tag={Link} to={`/user-extras/${userExtras.id}/delete`} color="danger" size="sm" data-cy="entityDeleteButton">
                         <FontAwesomeIcon icon="trash" /> <span className="d-none d-md-inline">Delete</span>
                       </Button>
                     </div>

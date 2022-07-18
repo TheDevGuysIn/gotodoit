@@ -4,9 +4,10 @@ import { Button, Row, Col } from 'reactstrap';
 import {} from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { getEntity } from './status.reducer';
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+
+import { getEntity } from './status.reducer';
 
 export const StatusDetail = (props: RouteComponentProps<{ id: string }>) => {
   const dispatch = useAppDispatch();

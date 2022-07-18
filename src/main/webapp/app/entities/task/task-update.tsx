@@ -4,6 +4,10 @@ import { Button, Row, Col, FormText } from 'reactstrap';
 import { isNumber, ValidatedField, ValidatedForm } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { convertDateTimeFromServer, convertDateTimeToServer, displayDefaultDateTime } from 'app/shared/util/date-utils';
+import { mapIdList } from 'app/shared/util/entity-utils';
+import { useAppDispatch, useAppSelector } from 'app/config/store';
+
 import { IProject } from 'app/shared/model/project.model';
 import { getEntities as getProjects } from 'app/entities/project/project.reducer';
 import { IStatus } from 'app/shared/model/status.model';
@@ -13,11 +17,8 @@ import { getEntities as getUserExtras } from 'app/entities/user-extras/user-extr
 import { getEntities as getTasks } from 'app/entities/task/task.reducer';
 import { ITag } from 'app/shared/model/tag.model';
 import { getEntities as getTags } from 'app/entities/tag/tag.reducer';
-import { getEntity, updateEntity, createEntity, reset } from './task.reducer';
 import { ITask } from 'app/shared/model/task.model';
-import { convertDateTimeFromServer, convertDateTimeToServer, displayDefaultDateTime } from 'app/shared/util/date-utils';
-import { mapIdList } from 'app/shared/util/entity-utils';
-import { useAppDispatch, useAppSelector } from 'app/config/store';
+import { getEntity, updateEntity, createEntity, reset } from './task.reducer';
 
 export const TaskUpdate = (props: RouteComponentProps<{ id: string }>) => {
   const dispatch = useAppDispatch();

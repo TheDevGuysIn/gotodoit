@@ -13,16 +13,16 @@ import org.springframework.stereotype.Repository;
  * Spring Data SQL repository for the Task entity.
  */
 @Repository
-public interface TaskRepository extends JpaRepository<Task, Long> {
-    @Query(
-        value = "select distinct task from Task task left join fetch task.tags",
-        countQuery = "select count(distinct task) from Task task"
-    )
-    Page<Task> findAllWithEagerRelationships(Pageable pageable);
+public interface TaskRepository extends TaskRepositoryWithBagRelationships, JpaRepository<Task, Long> {
+    default Optional<Task> findOneWithEagerRelationships(Long id) {
+        return this.fetchBagRelationships(this.findById(id));
+    }
 
-    @Query("select distinct task from Task task left join fetch task.tags")
-    List<Task> findAllWithEagerRelationships();
+    default List<Task> findAllWithEagerRelationships() {
+        return this.fetchBagRelationships(this.findAll());
+    }
 
-    @Query("select task from Task task left join fetch task.tags where task.id =:id")
-    Optional<Task> findOneWithEagerRelationships(@Param("id") Long id);
+    default Page<Task> findAllWithEagerRelationships(Pageable pageable) {
+        return this.fetchBagRelationships(this.findAll(pageable));
+    }
 }

@@ -4,11 +4,12 @@ import { Button, Row, Col, FormText } from 'reactstrap';
 import { isNumber, ValidatedField, ValidatedForm } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { getEntity, updateEntity, createEntity, reset } from './status.reducer';
-import { IStatus } from 'app/shared/model/status.model';
 import { convertDateTimeFromServer, convertDateTimeToServer, displayDefaultDateTime } from 'app/shared/util/date-utils';
 import { mapIdList } from 'app/shared/util/entity-utils';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
+
+import { IStatus } from 'app/shared/model/status.model';
+import { getEntity, updateEntity, createEntity, reset } from './status.reducer';
 
 export const StatusUpdate = (props: RouteComponentProps<{ id: string }>) => {
   const dispatch = useAppDispatch();

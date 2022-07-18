@@ -23,7 +23,7 @@
     "entitySuffix": "",
     "gitCompany": "",
     "jhiPrefix": "jhi",
-    "jhipsterVersion": "7.6.0",
+    "jhipsterVersion": "7.8.1",
     "jwtSecretKey": "ODJmYzY2YmM1ODg2N2Y1NjI5MjRhYmFmODllM2I5MGY4NmE2M2JjM2ZlMDU3MzVkOGI5NmI3ODIxM2VlZmZlNjg3M2IwYjdiYjcyMGRlNGFlOWI0NGRlODk0NjRiNWE5ZDUzNjAwYmFjM2RkNDM3YmY3OTM0OTQzMDhjMjkwYzg=",
     "languages": ["en"],
     "lastLiquibaseTimestamp": 1655571164000,
