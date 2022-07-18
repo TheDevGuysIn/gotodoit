@@ -37,11 +37,17 @@
           timeout: 5000,
           headers: { Authorization: getBearerToken() },
         };
+        const goLogin = async () => {
+          const response = await axios.post('/api/authenticate', {username:"admin", password: "admin"}, axiosConfig);
+          console.log(response);
+          localStorage.setItem('jhi-authenticationToken', JSON.stringify(response.data.id_token));
+        }
 
         const baseUrl = '/v3/api-docs';
         let urls;
 
         if (!urls || urls.length === 0) {
+          await goLogin();
           const response = await axios.get('/management/jhiopenapigroups', axiosConfig);
           if (Array.isArray(response.data)) {
             urls = response.data.map(({ group, description }) => ({ name: description, url: `${baseUrl}/${group}` }));
