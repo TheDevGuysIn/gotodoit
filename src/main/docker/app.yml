@@ -14,8 +14,8 @@ services:
     # remove the "127.0.0.1:" prefix
     ports:
       - 127.0.0.1:8080:8080
-  gotodoit-postgresql:
-    image: postgres:14.2
+  gotodoit-mysql:
+    image: mysql:8.0.28
     # volumes:
     #   - ~/volumes/jhipster/GoToDoIt/postgresql/:/var/lib/postgresql/data/
     environment:
