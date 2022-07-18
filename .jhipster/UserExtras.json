@@ -12,7 +12,7 @@
     }
   ],
   "fluentMethods": true,
-  "jpaMetamodelFiltering": false,
+  "jpaMetamodelFiltering": true,
   "name": "UserExtras",
   "pagination": "no",
   "readOnly": false,
@@ -33,5 +33,5 @@
       "relationshipType": "many-to-many"
     }
   ],
-  "service": "no"
+  "service": "serviceImpl"
 }

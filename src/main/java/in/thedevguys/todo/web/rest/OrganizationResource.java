@@ -2,6 +2,9 @@ package in.thedevguys.todo.web.rest;
 
 import in.thedevguys.todo.domain.Organization;
 import in.thedevguys.todo.repository.OrganizationRepository;
+import in.thedevguys.todo.service.OrganizationQueryService;
+import in.thedevguys.todo.service.OrganizationService;
+import in.thedevguys.todo.service.criteria.OrganizationCriteria;
 import in.thedevguys.todo.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.ResponseUtil;
@@ -24,7 +26,6 @@ import tech.jhipster.web.util.ResponseUtil;
  */
 @RestController
 @RequestMapping("/api")
-@Transactional
 public class OrganizationResource {
 
     private final Logger log = LoggerFactory.getLogger(OrganizationResource.class);
@@ -34,10 +35,20 @@ public class OrganizationResource {
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
+    private final OrganizationService organizationService;
+
     private final OrganizationRepository organizationRepository;
 
-    public OrganizationResource(OrganizationRepository organizationRepository) {
+    private final OrganizationQueryService organizationQueryService;
+
+    public OrganizationResource(
+        OrganizationService organizationService,
+        OrganizationRepository organizationRepository,
+        OrganizationQueryService organizationQueryService
+    ) {
+        this.organizationService = organizationService;
         this.organizationRepository = organizationRepository;
+        this.organizationQueryService = organizationQueryService;
     }
 
     /**
@@ -53,7 +64,7 @@ public class OrganizationResource {
         if (organization.getId() != null) {
             throw new BadRequestAlertException("A new organization cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Organization result = organizationRepository.save(organization);
+        Organization result = organizationService.save(organization);
         return ResponseEntity
             .created(new URI("/api/organizations/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -87,7 +98,7 @@ public class OrganizationResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Organization result = organizationRepository.save(organization);
+        Organization result = organizationService.update(organization);
         return ResponseEntity
             .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, organization.getId().toString()))
@@ -122,22 +133,7 @@ public class OrganizationResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Optional<Organization> result = organizationRepository
-            .findById(organization.getId())
-            .map(existingOrganization -> {
-                if (organization.getName() != null) {
-                    existingOrganization.setName(organization.getName());
-                }
-                if (organization.getImage() != null) {
-                    existingOrganization.setImage(organization.getImage());
-                }
-                if (organization.getImageContentType() != null) {
-                    existingOrganization.setImageContentType(organization.getImageContentType());
-                }
-
-                return existingOrganization;
-            })
-            .map(organizationRepository::save);
+        Optional<Organization> result = organizationService.partialUpdate(organization);
 
         return ResponseUtil.wrapOrNotFound(
             result,
@@ -148,12 +144,26 @@ public class OrganizationResource {
     /**
      * {@code GET  /organizations} : get all the organizations.
      *
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of organizations in body.
      */
     @GetMapping("/organizations")
-    public List<Organization> getAllOrganizations() {
-        log.debug("REST request to get all Organizations");
-        return organizationRepository.findAll();
+    public ResponseEntity<List<Organization>> getAllOrganizations(OrganizationCriteria criteria) {
+        log.debug("REST request to get Organizations by criteria: {}", criteria);
+        List<Organization> entityList = organizationQueryService.findByCriteria(criteria);
+        return ResponseEntity.ok().body(entityList);
+    }
+
+    /**
+     * {@code GET  /organizations/count} : count all the organizations.
+     *
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/organizations/count")
+    public ResponseEntity<Long> countOrganizations(OrganizationCriteria criteria) {
+        log.debug("REST request to count Organizations by criteria: {}", criteria);
+        return ResponseEntity.ok().body(organizationQueryService.countByCriteria(criteria));
     }
 
     /**
@@ -165,7 +175,7 @@ public class OrganizationResource {
     @GetMapping("/organizations/{id}")
     public ResponseEntity<Organization> getOrganization(@PathVariable Long id) {
         log.debug("REST request to get Organization : {}", id);
-        Optional<Organization> organization = organizationRepository.findById(id);
+        Optional<Organization> organization = organizationService.findOne(id);
         return ResponseUtil.wrapOrNotFound(organization);
     }
 
@@ -178,7 +188,7 @@ public class OrganizationResource {
     @DeleteMapping("/organizations/{id}")
     public ResponseEntity<Void> deleteOrganization(@PathVariable Long id) {
         log.debug("REST request to delete Organization : {}", id);
-        organizationRepository.deleteById(id);
+        organizationService.delete(id);
         return ResponseEntity
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))

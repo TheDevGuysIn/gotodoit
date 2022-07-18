@@ -2,6 +2,9 @@ package in.thedevguys.todo.web.rest;
 
 import in.thedevguys.todo.domain.Tag;
 import in.thedevguys.todo.repository.TagRepository;
+import in.thedevguys.todo.service.TagQueryService;
+import in.thedevguys.todo.service.TagService;
+import in.thedevguys.todo.service.criteria.TagCriteria;
 import in.thedevguys.todo.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.ResponseUtil;
@@ -24,7 +26,6 @@ import tech.jhipster.web.util.ResponseUtil;
  */
 @RestController
 @RequestMapping("/api")
-@Transactional
 public class TagResource {
 
     private final Logger log = LoggerFactory.getLogger(TagResource.class);
@@ -34,10 +35,16 @@ public class TagResource {
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
+    private final TagService tagService;
+
     private final TagRepository tagRepository;
 
-    public TagResource(TagRepository tagRepository) {
+    private final TagQueryService tagQueryService;
+
+    public TagResource(TagService tagService, TagRepository tagRepository, TagQueryService tagQueryService) {
+        this.tagService = tagService;
         this.tagRepository = tagRepository;
+        this.tagQueryService = tagQueryService;
     }
 
     /**
@@ -53,7 +60,7 @@ public class TagResource {
         if (tag.getId() != null) {
             throw new BadRequestAlertException("A new tag cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Tag result = tagRepository.save(tag);
+        Tag result = tagService.save(tag);
         return ResponseEntity
             .created(new URI("/api/tags/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -85,7 +92,7 @@ public class TagResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Tag result = tagRepository.save(tag);
+        Tag result = tagService.update(tag);
         return ResponseEntity
             .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, tag.getId().toString()))
@@ -118,19 +125,7 @@ public class TagResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Optional<Tag> result = tagRepository
-            .findById(tag.getId())
-            .map(existingTag -> {
-                if (tag.getName() != null) {
-                    existingTag.setName(tag.getName());
-                }
-                if (tag.getColor() != null) {
-                    existingTag.setColor(tag.getColor());
-                }
-
-                return existingTag;
-            })
-            .map(tagRepository::save);
+        Optional<Tag> result = tagService.partialUpdate(tag);
 
         return ResponseUtil.wrapOrNotFound(
             result,
@@ -141,12 +136,26 @@ public class TagResource {
     /**
      * {@code GET  /tags} : get all the tags.
      *
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of tags in body.
      */
     @GetMapping("/tags")
-    public List<Tag> getAllTags() {
-        log.debug("REST request to get all Tags");
-        return tagRepository.findAll();
+    public ResponseEntity<List<Tag>> getAllTags(TagCriteria criteria) {
+        log.debug("REST request to get Tags by criteria: {}", criteria);
+        List<Tag> entityList = tagQueryService.findByCriteria(criteria);
+        return ResponseEntity.ok().body(entityList);
+    }
+
+    /**
+     * {@code GET  /tags/count} : count all the tags.
+     *
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/tags/count")
+    public ResponseEntity<Long> countTags(TagCriteria criteria) {
+        log.debug("REST request to count Tags by criteria: {}", criteria);
+        return ResponseEntity.ok().body(tagQueryService.countByCriteria(criteria));
     }
 
     /**
@@ -158,7 +167,7 @@ public class TagResource {
     @GetMapping("/tags/{id}")
     public ResponseEntity<Tag> getTag(@PathVariable Long id) {
         log.debug("REST request to get Tag : {}", id);
-        Optional<Tag> tag = tagRepository.findById(id);
+        Optional<Tag> tag = tagService.findOne(id);
         return ResponseUtil.wrapOrNotFound(tag);
     }
 
@@ -171,7 +180,7 @@ public class TagResource {
     @DeleteMapping("/tags/{id}")
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
         log.debug("REST request to delete Tag : {}", id);
-        tagRepository.deleteById(id);
+        tagService.delete(id);
         return ResponseEntity
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))

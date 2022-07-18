@@ -7,7 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import in.thedevguys.todo.IntegrationTest;
 import in.thedevguys.todo.domain.Status;
+import in.thedevguys.todo.domain.Task;
 import in.thedevguys.todo.repository.StatusRepository;
+import in.thedevguys.todo.service.criteria.StatusCriteria;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -155,6 +157,166 @@ class StatusResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(status.getId().intValue()))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME));
+    }
+
+    @Test
+    @Transactional
+    void getStatusesByIdFiltering() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+
+        Long id = status.getId();
+
+        defaultStatusShouldBeFound("id.equals=" + id);
+        defaultStatusShouldNotBeFound("id.notEquals=" + id);
+
+        defaultStatusShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultStatusShouldNotBeFound("id.greaterThan=" + id);
+
+        defaultStatusShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultStatusShouldNotBeFound("id.lessThan=" + id);
+    }
+
+    @Test
+    @Transactional
+    void getAllStatusesByNameIsEqualToSomething() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+
+        // Get all the statusList where name equals to DEFAULT_NAME
+        defaultStatusShouldBeFound("name.equals=" + DEFAULT_NAME);
+
+        // Get all the statusList where name equals to UPDATED_NAME
+        defaultStatusShouldNotBeFound("name.equals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllStatusesByNameIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+
+        // Get all the statusList where name not equals to DEFAULT_NAME
+        defaultStatusShouldNotBeFound("name.notEquals=" + DEFAULT_NAME);
+
+        // Get all the statusList where name not equals to UPDATED_NAME
+        defaultStatusShouldBeFound("name.notEquals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllStatusesByNameIsInShouldWork() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+
+        // Get all the statusList where name in DEFAULT_NAME or UPDATED_NAME
+        defaultStatusShouldBeFound("name.in=" + DEFAULT_NAME + "," + UPDATED_NAME);
+
+        // Get all the statusList where name equals to UPDATED_NAME
+        defaultStatusShouldNotBeFound("name.in=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllStatusesByNameIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+
+        // Get all the statusList where name is not null
+        defaultStatusShouldBeFound("name.specified=true");
+
+        // Get all the statusList where name is null
+        defaultStatusShouldNotBeFound("name.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllStatusesByNameContainsSomething() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+
+        // Get all the statusList where name contains DEFAULT_NAME
+        defaultStatusShouldBeFound("name.contains=" + DEFAULT_NAME);
+
+        // Get all the statusList where name contains UPDATED_NAME
+        defaultStatusShouldNotBeFound("name.contains=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllStatusesByNameNotContainsSomething() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+
+        // Get all the statusList where name does not contain DEFAULT_NAME
+        defaultStatusShouldNotBeFound("name.doesNotContain=" + DEFAULT_NAME);
+
+        // Get all the statusList where name does not contain UPDATED_NAME
+        defaultStatusShouldBeFound("name.doesNotContain=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllStatusesByTaskIsEqualToSomething() throws Exception {
+        // Initialize the database
+        statusRepository.saveAndFlush(status);
+        Task task;
+        if (TestUtil.findAll(em, Task.class).isEmpty()) {
+            task = TaskResourceIT.createEntity(em);
+            em.persist(task);
+            em.flush();
+        } else {
+            task = TestUtil.findAll(em, Task.class).get(0);
+        }
+        em.persist(task);
+        em.flush();
+        status.addTask(task);
+        statusRepository.saveAndFlush(status);
+        Long taskId = task.getId();
+
+        // Get all the statusList where task equals to taskId
+        defaultStatusShouldBeFound("taskId.equals=" + taskId);
+
+        // Get all the statusList where task equals to (taskId + 1)
+        defaultStatusShouldNotBeFound("taskId.equals=" + (taskId + 1));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is returned.
+     */
+    private void defaultStatusShouldBeFound(String filter) throws Exception {
+        restStatusMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(status.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)));
+
+        // Check, that the count call also returns 1
+        restStatusMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("1"));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned.
+     */
+    private void defaultStatusShouldNotBeFound(String filter) throws Exception {
+        restStatusMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+
+        // Check, that the count call also returns 0
+        restStatusMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("0"));
     }
 
     @Test

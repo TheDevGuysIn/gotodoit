@@ -13,7 +13,8 @@ import org.springframework.stereotype.Repository;
  * Spring Data SQL repository for the UserExtras entity.
  */
 @Repository
-public interface UserExtrasRepository extends UserExtrasRepositoryWithBagRelationships, JpaRepository<UserExtras, Long> {
+public interface UserExtrasRepository
+    extends UserExtrasRepositoryWithBagRelationships, JpaRepository<UserExtras, Long>, JpaSpecificationExecutor<UserExtras> {
     default Optional<UserExtras> findOneWithEagerRelationships(Long id) {
         return this.fetchBagRelationships(this.findById(id));
     }

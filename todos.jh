@@ -43,3 +43,6 @@ relationship ManyToOne{
     Task{parent} to Task
     Project to Organization
 }
+
+service all with serviceImpl
+filter all

@@ -19,7 +19,7 @@
     }
   ],
   "fluentMethods": true,
-  "jpaMetamodelFiltering": false,
+  "jpaMetamodelFiltering": true,
   "name": "Organization",
   "pagination": "no",
   "readOnly": false,
@@ -38,5 +38,5 @@
       "relationshipType": "many-to-many"
     }
   ],
-  "service": "no"
+  "service": "serviceImpl"
 }

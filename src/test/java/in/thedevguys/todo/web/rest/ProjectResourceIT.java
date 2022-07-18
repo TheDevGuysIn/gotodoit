@@ -6,8 +6,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import in.thedevguys.todo.IntegrationTest;
+import in.thedevguys.todo.domain.Organization;
 import in.thedevguys.todo.domain.Project;
+import in.thedevguys.todo.domain.Task;
 import in.thedevguys.todo.repository.ProjectRepository;
+import in.thedevguys.todo.service.criteria.ProjectCriteria;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -155,6 +158,192 @@ class ProjectResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(project.getId().intValue()))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME));
+    }
+
+    @Test
+    @Transactional
+    void getProjectsByIdFiltering() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+
+        Long id = project.getId();
+
+        defaultProjectShouldBeFound("id.equals=" + id);
+        defaultProjectShouldNotBeFound("id.notEquals=" + id);
+
+        defaultProjectShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultProjectShouldNotBeFound("id.greaterThan=" + id);
+
+        defaultProjectShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultProjectShouldNotBeFound("id.lessThan=" + id);
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByNameIsEqualToSomething() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+
+        // Get all the projectList where name equals to DEFAULT_NAME
+        defaultProjectShouldBeFound("name.equals=" + DEFAULT_NAME);
+
+        // Get all the projectList where name equals to UPDATED_NAME
+        defaultProjectShouldNotBeFound("name.equals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByNameIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+
+        // Get all the projectList where name not equals to DEFAULT_NAME
+        defaultProjectShouldNotBeFound("name.notEquals=" + DEFAULT_NAME);
+
+        // Get all the projectList where name not equals to UPDATED_NAME
+        defaultProjectShouldBeFound("name.notEquals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByNameIsInShouldWork() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+
+        // Get all the projectList where name in DEFAULT_NAME or UPDATED_NAME
+        defaultProjectShouldBeFound("name.in=" + DEFAULT_NAME + "," + UPDATED_NAME);
+
+        // Get all the projectList where name equals to UPDATED_NAME
+        defaultProjectShouldNotBeFound("name.in=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByNameIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+
+        // Get all the projectList where name is not null
+        defaultProjectShouldBeFound("name.specified=true");
+
+        // Get all the projectList where name is null
+        defaultProjectShouldNotBeFound("name.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByNameContainsSomething() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+
+        // Get all the projectList where name contains DEFAULT_NAME
+        defaultProjectShouldBeFound("name.contains=" + DEFAULT_NAME);
+
+        // Get all the projectList where name contains UPDATED_NAME
+        defaultProjectShouldNotBeFound("name.contains=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByNameNotContainsSomething() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+
+        // Get all the projectList where name does not contain DEFAULT_NAME
+        defaultProjectShouldNotBeFound("name.doesNotContain=" + DEFAULT_NAME);
+
+        // Get all the projectList where name does not contain UPDATED_NAME
+        defaultProjectShouldBeFound("name.doesNotContain=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByOrganizationIsEqualToSomething() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+        Organization organization;
+        if (TestUtil.findAll(em, Organization.class).isEmpty()) {
+            organization = OrganizationResourceIT.createEntity(em);
+            em.persist(organization);
+            em.flush();
+        } else {
+            organization = TestUtil.findAll(em, Organization.class).get(0);
+        }
+        em.persist(organization);
+        em.flush();
+        project.setOrganization(organization);
+        projectRepository.saveAndFlush(project);
+        Long organizationId = organization.getId();
+
+        // Get all the projectList where organization equals to organizationId
+        defaultProjectShouldBeFound("organizationId.equals=" + organizationId);
+
+        // Get all the projectList where organization equals to (organizationId + 1)
+        defaultProjectShouldNotBeFound("organizationId.equals=" + (organizationId + 1));
+    }
+
+    @Test
+    @Transactional
+    void getAllProjectsByTaskIsEqualToSomething() throws Exception {
+        // Initialize the database
+        projectRepository.saveAndFlush(project);
+        Task task;
+        if (TestUtil.findAll(em, Task.class).isEmpty()) {
+            task = TaskResourceIT.createEntity(em);
+            em.persist(task);
+            em.flush();
+        } else {
+            task = TestUtil.findAll(em, Task.class).get(0);
+        }
+        em.persist(task);
+        em.flush();
+        project.addTask(task);
+        projectRepository.saveAndFlush(project);
+        Long taskId = task.getId();
+
+        // Get all the projectList where task equals to taskId
+        defaultProjectShouldBeFound("taskId.equals=" + taskId);
+
+        // Get all the projectList where task equals to (taskId + 1)
+        defaultProjectShouldNotBeFound("taskId.equals=" + (taskId + 1));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is returned.
+     */
+    private void defaultProjectShouldBeFound(String filter) throws Exception {
+        restProjectMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(project.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)));
+
+        // Check, that the count call also returns 1
+        restProjectMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("1"));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned.
+     */
+    private void defaultProjectShouldNotBeFound(String filter) throws Exception {
+        restProjectMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+
+        // Check, that the count call also returns 0
+        restProjectMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("0"));
     }
 
     @Test

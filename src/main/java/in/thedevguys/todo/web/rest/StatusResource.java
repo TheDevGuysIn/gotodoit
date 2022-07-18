@@ -2,6 +2,9 @@ package in.thedevguys.todo.web.rest;
 
 import in.thedevguys.todo.domain.Status;
 import in.thedevguys.todo.repository.StatusRepository;
+import in.thedevguys.todo.service.StatusQueryService;
+import in.thedevguys.todo.service.StatusService;
+import in.thedevguys.todo.service.criteria.StatusCriteria;
 import in.thedevguys.todo.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.ResponseUtil;
@@ -24,7 +26,6 @@ import tech.jhipster.web.util.ResponseUtil;
  */
 @RestController
 @RequestMapping("/api")
-@Transactional
 public class StatusResource {
 
     private final Logger log = LoggerFactory.getLogger(StatusResource.class);
@@ -34,10 +35,16 @@ public class StatusResource {
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
+    private final StatusService statusService;
+
     private final StatusRepository statusRepository;
 
-    public StatusResource(StatusRepository statusRepository) {
+    private final StatusQueryService statusQueryService;
+
+    public StatusResource(StatusService statusService, StatusRepository statusRepository, StatusQueryService statusQueryService) {
+        this.statusService = statusService;
         this.statusRepository = statusRepository;
+        this.statusQueryService = statusQueryService;
     }
 
     /**
@@ -53,7 +60,7 @@ public class StatusResource {
         if (status.getId() != null) {
             throw new BadRequestAlertException("A new status cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Status result = statusRepository.save(status);
+        Status result = statusService.save(status);
         return ResponseEntity
             .created(new URI("/api/statuses/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -87,7 +94,7 @@ public class StatusResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Status result = statusRepository.save(status);
+        Status result = statusService.update(status);
         return ResponseEntity
             .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, status.getId().toString()))
@@ -122,16 +129,7 @@ public class StatusResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Optional<Status> result = statusRepository
-            .findById(status.getId())
-            .map(existingStatus -> {
-                if (status.getName() != null) {
-                    existingStatus.setName(status.getName());
-                }
-
-                return existingStatus;
-            })
-            .map(statusRepository::save);
+        Optional<Status> result = statusService.partialUpdate(status);
 
         return ResponseUtil.wrapOrNotFound(
             result,
@@ -142,12 +140,26 @@ public class StatusResource {
     /**
      * {@code GET  /statuses} : get all the statuses.
      *
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of statuses in body.
      */
     @GetMapping("/statuses")
-    public List<Status> getAllStatuses() {
-        log.debug("REST request to get all Statuses");
-        return statusRepository.findAll();
+    public ResponseEntity<List<Status>> getAllStatuses(StatusCriteria criteria) {
+        log.debug("REST request to get Statuses by criteria: {}", criteria);
+        List<Status> entityList = statusQueryService.findByCriteria(criteria);
+        return ResponseEntity.ok().body(entityList);
+    }
+
+    /**
+     * {@code GET  /statuses/count} : count all the statuses.
+     *
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/statuses/count")
+    public ResponseEntity<Long> countStatuses(StatusCriteria criteria) {
+        log.debug("REST request to count Statuses by criteria: {}", criteria);
+        return ResponseEntity.ok().body(statusQueryService.countByCriteria(criteria));
     }
 
     /**
@@ -159,7 +171,7 @@ public class StatusResource {
     @GetMapping("/statuses/{id}")
     public ResponseEntity<Status> getStatus(@PathVariable Long id) {
         log.debug("REST request to get Status : {}", id);
-        Optional<Status> status = statusRepository.findById(id);
+        Optional<Status> status = statusService.findOne(id);
         return ResponseUtil.wrapOrNotFound(status);
     }
 
@@ -172,7 +184,7 @@ public class StatusResource {
     @DeleteMapping("/statuses/{id}")
     public ResponseEntity<Void> deleteStatus(@PathVariable Long id) {
         log.debug("REST request to delete Status : {}", id);
-        statusRepository.deleteById(id);
+        statusService.delete(id);
         return ResponseEntity
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))

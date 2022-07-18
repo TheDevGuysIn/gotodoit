@@ -7,7 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import in.thedevguys.todo.IntegrationTest;
 import in.thedevguys.todo.domain.Organization;
+import in.thedevguys.todo.domain.Project;
+import in.thedevguys.todo.domain.UserExtras;
 import in.thedevguys.todo.repository.OrganizationRepository;
+import in.thedevguys.todo.service.criteria.OrganizationCriteria;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -167,6 +170,194 @@ class OrganizationResourceIT {
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
             .andExpect(jsonPath("$.imageContentType").value(DEFAULT_IMAGE_CONTENT_TYPE))
             .andExpect(jsonPath("$.image").value(Base64Utils.encodeToString(DEFAULT_IMAGE)));
+    }
+
+    @Test
+    @Transactional
+    void getOrganizationsByIdFiltering() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+
+        Long id = organization.getId();
+
+        defaultOrganizationShouldBeFound("id.equals=" + id);
+        defaultOrganizationShouldNotBeFound("id.notEquals=" + id);
+
+        defaultOrganizationShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultOrganizationShouldNotBeFound("id.greaterThan=" + id);
+
+        defaultOrganizationShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultOrganizationShouldNotBeFound("id.lessThan=" + id);
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByNameIsEqualToSomething() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+
+        // Get all the organizationList where name equals to DEFAULT_NAME
+        defaultOrganizationShouldBeFound("name.equals=" + DEFAULT_NAME);
+
+        // Get all the organizationList where name equals to UPDATED_NAME
+        defaultOrganizationShouldNotBeFound("name.equals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByNameIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+
+        // Get all the organizationList where name not equals to DEFAULT_NAME
+        defaultOrganizationShouldNotBeFound("name.notEquals=" + DEFAULT_NAME);
+
+        // Get all the organizationList where name not equals to UPDATED_NAME
+        defaultOrganizationShouldBeFound("name.notEquals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByNameIsInShouldWork() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+
+        // Get all the organizationList where name in DEFAULT_NAME or UPDATED_NAME
+        defaultOrganizationShouldBeFound("name.in=" + DEFAULT_NAME + "," + UPDATED_NAME);
+
+        // Get all the organizationList where name equals to UPDATED_NAME
+        defaultOrganizationShouldNotBeFound("name.in=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByNameIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+
+        // Get all the organizationList where name is not null
+        defaultOrganizationShouldBeFound("name.specified=true");
+
+        // Get all the organizationList where name is null
+        defaultOrganizationShouldNotBeFound("name.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByNameContainsSomething() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+
+        // Get all the organizationList where name contains DEFAULT_NAME
+        defaultOrganizationShouldBeFound("name.contains=" + DEFAULT_NAME);
+
+        // Get all the organizationList where name contains UPDATED_NAME
+        defaultOrganizationShouldNotBeFound("name.contains=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByNameNotContainsSomething() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+
+        // Get all the organizationList where name does not contain DEFAULT_NAME
+        defaultOrganizationShouldNotBeFound("name.doesNotContain=" + DEFAULT_NAME);
+
+        // Get all the organizationList where name does not contain UPDATED_NAME
+        defaultOrganizationShouldBeFound("name.doesNotContain=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByProjectIsEqualToSomething() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+        Project project;
+        if (TestUtil.findAll(em, Project.class).isEmpty()) {
+            project = ProjectResourceIT.createEntity(em);
+            em.persist(project);
+            em.flush();
+        } else {
+            project = TestUtil.findAll(em, Project.class).get(0);
+        }
+        em.persist(project);
+        em.flush();
+        organization.addProject(project);
+        organizationRepository.saveAndFlush(organization);
+        Long projectId = project.getId();
+
+        // Get all the organizationList where project equals to projectId
+        defaultOrganizationShouldBeFound("projectId.equals=" + projectId);
+
+        // Get all the organizationList where project equals to (projectId + 1)
+        defaultOrganizationShouldNotBeFound("projectId.equals=" + (projectId + 1));
+    }
+
+    @Test
+    @Transactional
+    void getAllOrganizationsByUserIsEqualToSomething() throws Exception {
+        // Initialize the database
+        organizationRepository.saveAndFlush(organization);
+        UserExtras user;
+        if (TestUtil.findAll(em, UserExtras.class).isEmpty()) {
+            user = UserExtrasResourceIT.createEntity(em);
+            em.persist(user);
+            em.flush();
+        } else {
+            user = TestUtil.findAll(em, UserExtras.class).get(0);
+        }
+        em.persist(user);
+        em.flush();
+        organization.addUser(user);
+        organizationRepository.saveAndFlush(organization);
+        Long userId = user.getId();
+
+        // Get all the organizationList where user equals to userId
+        defaultOrganizationShouldBeFound("userId.equals=" + userId);
+
+        // Get all the organizationList where user equals to (userId + 1)
+        defaultOrganizationShouldNotBeFound("userId.equals=" + (userId + 1));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is returned.
+     */
+    private void defaultOrganizationShouldBeFound(String filter) throws Exception {
+        restOrganizationMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(organization.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(DEFAULT_IMAGE_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(DEFAULT_IMAGE))));
+
+        // Check, that the count call also returns 1
+        restOrganizationMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("1"));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned.
+     */
+    private void defaultOrganizationShouldNotBeFound(String filter) throws Exception {
+        restOrganizationMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+
+        // Check, that the count call also returns 0
+        restOrganizationMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("0"));
     }
 
     @Test

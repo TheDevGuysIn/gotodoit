@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
  * Spring Data SQL repository for the Task entity.
  */
 @Repository
-public interface TaskRepository extends TaskRepositoryWithBagRelationships, JpaRepository<Task, Long> {
+public interface TaskRepository extends TaskRepositoryWithBagRelationships, JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
     default Optional<Task> findOneWithEagerRelationships(Long id) {
         return this.fetchBagRelationships(this.findById(id));
     }

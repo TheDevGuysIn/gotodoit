@@ -15,7 +15,7 @@
   ],
   "fluentMethods": true,
   "javadoc": "not an ignored comment",
-  "jpaMetamodelFiltering": false,
+  "jpaMetamodelFiltering": true,
   "name": "Project",
   "pagination": "no",
   "readOnly": false,
@@ -33,5 +33,5 @@
       "relationshipType": "one-to-many"
     }
   ],
-  "service": "no"
+  "service": "serviceImpl"
 }

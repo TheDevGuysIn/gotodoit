@@ -2,6 +2,9 @@ package in.thedevguys.todo.web.rest;
 
 import in.thedevguys.todo.domain.Project;
 import in.thedevguys.todo.repository.ProjectRepository;
+import in.thedevguys.todo.service.ProjectQueryService;
+import in.thedevguys.todo.service.ProjectService;
+import in.thedevguys.todo.service.criteria.ProjectCriteria;
 import in.thedevguys.todo.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.ResponseUtil;
@@ -24,7 +26,6 @@ import tech.jhipster.web.util.ResponseUtil;
  */
 @RestController
 @RequestMapping("/api")
-@Transactional
 public class ProjectResource {
 
     private final Logger log = LoggerFactory.getLogger(ProjectResource.class);
@@ -34,10 +35,16 @@ public class ProjectResource {
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
+    private final ProjectService projectService;
+
     private final ProjectRepository projectRepository;
 
-    public ProjectResource(ProjectRepository projectRepository) {
+    private final ProjectQueryService projectQueryService;
+
+    public ProjectResource(ProjectService projectService, ProjectRepository projectRepository, ProjectQueryService projectQueryService) {
+        this.projectService = projectService;
         this.projectRepository = projectRepository;
+        this.projectQueryService = projectQueryService;
     }
 
     /**
@@ -53,7 +60,7 @@ public class ProjectResource {
         if (project.getId() != null) {
             throw new BadRequestAlertException("A new project cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Project result = projectRepository.save(project);
+        Project result = projectService.save(project);
         return ResponseEntity
             .created(new URI("/api/projects/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -87,7 +94,7 @@ public class ProjectResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Project result = projectRepository.save(project);
+        Project result = projectService.update(project);
         return ResponseEntity
             .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, project.getId().toString()))
@@ -122,16 +129,7 @@ public class ProjectResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Optional<Project> result = projectRepository
-            .findById(project.getId())
-            .map(existingProject -> {
-                if (project.getName() != null) {
-                    existingProject.setName(project.getName());
-                }
-
-                return existingProject;
-            })
-            .map(projectRepository::save);
+        Optional<Project> result = projectService.partialUpdate(project);
 
         return ResponseUtil.wrapOrNotFound(
             result,
@@ -142,12 +140,26 @@ public class ProjectResource {
     /**
      * {@code GET  /projects} : get all the projects.
      *
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of projects in body.
      */
     @GetMapping("/projects")
-    public List<Project> getAllProjects() {
-        log.debug("REST request to get all Projects");
-        return projectRepository.findAll();
+    public ResponseEntity<List<Project>> getAllProjects(ProjectCriteria criteria) {
+        log.debug("REST request to get Projects by criteria: {}", criteria);
+        List<Project> entityList = projectQueryService.findByCriteria(criteria);
+        return ResponseEntity.ok().body(entityList);
+    }
+
+    /**
+     * {@code GET  /projects/count} : count all the projects.
+     *
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/projects/count")
+    public ResponseEntity<Long> countProjects(ProjectCriteria criteria) {
+        log.debug("REST request to count Projects by criteria: {}", criteria);
+        return ResponseEntity.ok().body(projectQueryService.countByCriteria(criteria));
     }
 
     /**
@@ -159,7 +171,7 @@ public class ProjectResource {
     @GetMapping("/projects/{id}")
     public ResponseEntity<Project> getProject(@PathVariable Long id) {
         log.debug("REST request to get Project : {}", id);
-        Optional<Project> project = projectRepository.findById(id);
+        Optional<Project> project = projectService.findOne(id);
         return ResponseUtil.wrapOrNotFound(project);
     }
 
@@ -172,7 +184,7 @@ public class ProjectResource {
     @DeleteMapping("/projects/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         log.debug("REST request to delete Project : {}", id);
-        projectRepository.deleteById(id);
+        projectService.delete(id);
         return ResponseEntity
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
