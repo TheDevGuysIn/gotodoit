@@ -33,7 +33,7 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:h2:file:./target/h2db/db/gotodoit;DB_CLOSE_DELAY=-1
-    username: GoToDoIt
+    username: gotodoit
     password:
     hikari:
       poolName: Hikari
@@ -56,6 +56,20 @@ spring:
     cache-duration: PT1S # 1 second, see the ISO 8601 standard
   thymeleaf:
     cache: false
+  sleuth:
+    # https://github.com/spring-projects/spring-framework/issues/27844#issuescomment-1002866885
+    # https://github.com/spring-cloud/spring-cloud-sleuth/issues/2094
+    async:
+      enabled: false
+    enabled: false
+    sampler:
+      probability: 1 # report 100% of traces
+  zipkin: # Use the "zipkin" Maven profile to have the Spring Cloud Zipkin dependencies
+    base-url: http://localhost:9411
+    enabled: false
+    locator:
+      discovery:
+        enabled: true
 
 server:
   port: 8080
@@ -86,7 +100,7 @@ jhipster:
     authentication:
       jwt:
         # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
-        base64-secret: ODJmYzY2YmM1ODg2N2Y1NjI5MjRhYmFmODllM2I5MGY4NmE2M2JjM2ZlMDU3MzVkOGI5NmI3ODIxM2VlZmZlNjg3M2IwYjdiYjcyMGRlNGFlOWI0NGRlODk0NjRiNWE5ZDUzNjAwYmFjM2RkNDM3YmY3OTM0OTQzMDhjMjkwYzg=
+        base64-secret: Yzc0YTVhOWEwYmQ2NjJkMDAzYTI1YzQ0NzA4NTYzMjNiZjk4YWZkNGE5MWMxMDhmY2Y3NjFhNTcwOGU5NmI4MjkzYTIyOWVhMGQzZjZiZjFkODJkZDg1MWMxMmM1MmNmMjZkYjY0MzIzM2YzNjUyMjgwOThhMDk3YmI3MTNiN2I=
         # Token is valid 24 hours
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
